@@ -6,7 +6,7 @@
 /*   By: adinari <adinari@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/27 21:20:09 by adinari           #+#    #+#             */
-/*   Updated: 2022/09/28 16:03:43 by adinari          ###   ########.fr       */
+/*   Updated: 2022/10/07 15:54:57 by adinari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,8 +17,9 @@
 # include <unistd.h>
 # include <stdio.h>
 # include <string.h>
+# include "libft/libft.h"
 
-typedef struct s_pipe
+typedef struct pipe
 {
 	int	read;
 	int	write;

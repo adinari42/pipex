@@ -6,13 +6,14 @@
 #    By: adinari <adinari@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/09/27 21:17:31 by adinari           #+#    #+#              #
-#    Updated: 2022/09/27 21:19:39 by adinari          ###   ########.fr        #
+#    Updated: 2022/10/07 15:57:06 by adinari          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = pipex
 
-FILES = main.c
+FILES = main.c\
+		libft/libft.a\
 
 OBJECTS = $(FILES:.c=.o)
 

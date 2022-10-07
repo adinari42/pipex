@@ -5,8 +5,8 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: adinari <adinari@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/09/27 21:19:54 by adinari           #+#    #+#             */
-/*   Updated: 2022/09/29 20:15:00 by adinari          ###   ########.fr       */
+/*   Created: 2022/10/02 00:08:24 by adinari           #+#    #+#             */
+/*   Updated: 2022/10/07 17:37:15 by adinari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,94 +14,122 @@
 #include <unistd.h>
 #include "pipex.h"
 #include "libft/libft.h"
+#include <fcntl.h>
+
+//this version takes care of multiple pipes with direct path or single command, without using infile or outputting to outfile
 
 char	**ft_split(char const *s, char c);
 
-char *return_correct_path(char **string, char *cmd)
+char	*return_correct_path(char **string, char *cmd)
 {
-	int i;
-	char *path;
-	
-	if (access(cmd, R_OK) == 0)
-	{
-		printf("string path >> %s\n", cmd);
-		return (cmd);
-	}
+	int		i;
+	char	*path;
+
 	i = 0;
 	while(string[i] != 0)
 	{
 		path = ft_strjoin(string[i], "/");
 		path = ft_strjoin(path, cmd);
-		printf("string path = %s\n", path);
-		if (access(path, R_OK) == 0)
-		{
-			printf("string path >> %s\n", path);
+		if (access(path, F_OK | X_OK) == 0)
 			return (path);
+		i++;
+	}
+	if (access(cmd, F_OK | X_OK) == 0)
+		return (cmd);
+	return (NULL);
+}
+
+char	**envp_parse(char **envp)
+{
+	int		j;
+	char	**envp_parse;
+
+	j = -1;
+	while (envp[++j])
+	{
+		if (!ft_strncmp(envp[j], "PATH=", 5))
+			break;
+	}
+	envp_parse = ft_split(*(envp + j) + 5, ':');
+	return (envp_parse);
+}
+
+int	main(int argc, char *argv[], char *envp[])
+{
+	int	i;
+	int	fd[2];
+	pid_t	pid;
+	int	error_code;
+	char	**split;
+	char **split_envp;//env split using :
+	char *path_check;
+	int		infile;
+	int	outfile;
+
+	split_envp = envp_parse(envp);
+	i = 2;
+	error_code = 0;
+	while (i <= argc - 2)
+	{
+		pipe(fd);
+		if (i == 2)
+		{
+			infile = open(argv[1], O_RDONLY);
+			if (infile == -1)
+			{
+				perror("Error:\n");
+				exit(1);
+			}
+			dup2(infile, 0);
+			close(infile);
+		}
+		split = ft_split(argv[i], ' ');
+		path_check = return_correct_path(split_envp, split[0]);
+		pid = fork();
+		if (pid == 0)
+		{
+			if (i < argc - 2)
+				dup2(fd[1], 1);
+			if (i == argc - 2)
+			{
+				outfile = open(argv[argc - 1], O_WRONLY | O_CREAT, 0644);	
+				if (outfile == -1)
+				{
+					perror("failed to create outfile");
+					exit(1);
+				}
+				dup2(outfile, 1);
+			}
+			close (fd[0]);
+			if (execve(path_check, split, envp) == -1)
+			{
+				perror("command not found");
+				exit(1);
+			}
+		}
+		else
+		{
+			dup2(fd[0], 0);
+			close (fd[1]);
+			waitpid(pid, &error_code, 0);
 		}
 		i++;
 	}
-	return (NULL);
-
-}
-int	main(int argc, char *argv[], char *envp[])
-{
-	t_pipe	P;
-	char **split1;//cmd1 and parameters
-	char **split2;//cmd2 and parameters
-	char **split_envp;//env split using :
-	char *checker;
-	int		fd[2];
-
-	P.read = 0;
-	P.write = 1;
-
-	int i = -1;
-	while (envp[++i])
-	{
-		if (!ft_strncmp(envp[i], "PATH=", 5))
-		{
-			printf("%s... %d \n", envp[i], i);
-			break;
-		}
-	}
-	printf(" i here = %d\n", i);
-	printf("env here : %s\n", *(envp + i) + 5);
-	split_envp = ft_split(*(envp + i) + 5, ':');
-	printf("split_envp[0] = %s\n", split_envp[0]);
-	split1 = ft_split(argv[1], ' ');
-	split2 = ft_split(argv[2], ' ');
-printf("split1[0] = %s\n", split1[0]);//
-printf("split2[0] = %s\n", split2[0]);//
-	checker = return_correct_path(split_envp,split1[0]);
-	printf("checker = %s\n", checker);
-
-
-	pipe(fd);
-
-	int	pid2;
-	int	pid1;
+	close(fd[0]);
+	close(fd[1]);
 	
-	pid1 = fork();
-
-	if (pid1 == 0)
-	{
-		close(fd[P.read]);
-		dup2(fd[P.write], P.write);
-		execve(checker, split1, envp);
-	}
-	else
-	{
-		checker = return_correct_path(split_envp, split2[0]);
-		pid2 = fork();
-		if (pid2 == 0)
-		{
-			close(fd[P.write]);
-			dup2(fd[P.read], P.read);
-			execve(checker, split2, envp);
-		}
-		waitpid(pid1, 0, 0);
-		close(fd[1]);
-		waitpid(pid2, 0, 0);
-		return (0);
-	}
 }
+
+// PERMISSION DENIED
+// FILE NOT FOUND
+// COMMAND NOT FOUND
+// FILE NOT FOUND FOR SOME COMMANDS (E.Q CAT)
+// BAD INPUT (ARGV == 5 FOR MENDATORY AND 6 FOR BONUS)
+
+
+
+//Line79: create infile here, restrict to only happen once at start
+//LINE87: read from infile instead of standard input (make a copy of it that replaces stdin)
+//LINE96: //redirects whatever was written on stdout to stdin(write) of next cmd 
+//LINE97: redirect to outfile alwasy on last loop
+//LINE116: redirect output of cmd to stdin of next cmd
