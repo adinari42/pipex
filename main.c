@@ -6,7 +6,7 @@
 /*   By: adinari <adinari@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/02 00:08:24 by adinari           #+#    #+#             */
-/*   Updated: 2022/10/15 23:57:52 by adinari          ###   ########.fr       */
+/*   Updated: 2022/10/16 19:32:09 by adinari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -92,11 +92,12 @@ int	main(int argc, char *argv[], char *envp[])
 					ft_putstr_fd(str, g_pipe.infile);
 					str = get_next_line(0);
 				}
-				// close(g_pipe.tmp);
+				
 				i = 3;
 				append = 1;
 				dup2(g_pipe.tmp, 0);
 				close(g_pipe.infile);
+				close(g_pipe.tmp);
 			}
 			else
 			{
