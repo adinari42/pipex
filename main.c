@@ -6,7 +6,7 @@
 /*   By: adinari <adinari@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/02 00:08:24 by adinari           #+#    #+#             */
-/*   Updated: 2022/10/07 17:37:15 by adinari          ###   ########.fr       */
+/*   Updated: 2022/10/15 23:57:52 by adinari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,70 +54,103 @@ char	**envp_parse(char **envp)
 	return (envp_parse);
 }
 
+/*difference between regular pipe and heredoc is that heredoc is used as infile,
+ then commands do the same, then append to the outfile*/
+ /*to do:
+ 	
+	*/
 int	main(int argc, char *argv[], char *envp[])
 {
 	int	i;
-	int	fd[2];
-	pid_t	pid;
 	int	error_code;
 	char	**split;
 	char **split_envp;//env split using :
 	char *path_check;
-	int		infile;
-	int	outfile;
+	int	append;
 
+	append = 0;
 	split_envp = envp_parse(envp);
-	i = 2;
+	i = 0;
 	error_code = 0;
+
 	while (i <= argc - 2)
 	{
-		pipe(fd);
-		if (i == 2)
-		{
-			infile = open(argv[1], O_RDONLY);
-			if (infile == -1)
+		pipe(g_pipe.fd);
+		if (i == 0)//this will be skipped when using here_doc, i = 3
+		{	if (ft_strncmp(argv[1], "here_doc", ft_strlen(argv[1])) == 0)
 			{
-				perror("Error:\n");
-				exit(1);
+				char	*str;
+
+				g_pipe.infile = open("tmp", O_WRONLY | O_CREAT, 0644);
+				g_pipe.tmp = open("tmp", O_RDONLY | O_CREAT);
+				// g_pipe.infile = 0;//infile is stdin 0 now, skip opening infile later
+				str = get_next_line(0);
+				while (1)
+				{	
+					if (ft_strncmp(argv[2], str, ft_strlen(str) - 1) == 0)//need to check why strlen returns bigger number
+						break;
+					ft_putstr_fd(str, g_pipe.infile);
+					str = get_next_line(0);
+				}
+				// close(g_pipe.tmp);
+				i = 3;
+				append = 1;
+				dup2(g_pipe.tmp, 0);
+				close(g_pipe.infile);
 			}
-			dup2(infile, 0);
-			close(infile);
+			else
+			{
+				g_pipe.infile = open(argv[1], O_RDONLY);
+				if (g_pipe.infile == -1)
+				{
+					perror("Error:\n");
+					exit(1);
+				}
+				dup2(g_pipe.infile, 0);
+				close(g_pipe.infile);
+				i = 2;
+			}
+
 		}
 		split = ft_split(argv[i], ' ');
 		path_check = return_correct_path(split_envp, split[0]);
-		pid = fork();
-		if (pid == 0)
+		g_pipe.pid = fork();
+		if (g_pipe.pid == 0)
 		{
 			if (i < argc - 2)
-				dup2(fd[1], 1);
+				dup2(g_pipe.fd[1], 1);
 			if (i == argc - 2)
 			{
-				outfile = open(argv[argc - 1], O_WRONLY | O_CREAT, 0644);	
-				if (outfile == -1)
+				if (append == 0)
+					g_pipe.outfile = open(argv[argc - 1], O_WRONLY | O_CREAT | O_TRUNC, 0644);
+				else
+					g_pipe.outfile = open(argv[argc - 1], O_WRONLY | O_CREAT | O_APPEND, 0644);
+				if (g_pipe.outfile == -1)
 				{
 					perror("failed to create outfile");
 					exit(1);
 				}
-				dup2(outfile, 1);
+				dup2(g_pipe.outfile, 1);
 			}
-			close (fd[0]);
+			close (g_pipe.fd[0]);
 			if (execve(path_check, split, envp) == -1)
 			{
+				
 				perror("command not found");
 				exit(1);
 			}
 		}
 		else
 		{
-			dup2(fd[0], 0);
-			close (fd[1]);
-			waitpid(pid, &error_code, 0);
+			dup2(g_pipe.fd[0], 0);
+			close (g_pipe.fd[1]);
+			waitpid(g_pipe.pid, &error_code, 0);
 		}
 		i++;
 	}
-	close(fd[0]);
-	close(fd[1]);
-	
+	close(g_pipe.fd[0]);
+	close(g_pipe.fd[1]);
+	unlink("tmp");
 }
 
 // PERMISSION DENIED
