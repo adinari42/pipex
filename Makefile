@@ -6,16 +6,17 @@
 #    By: adinari <adinari@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/09/27 21:17:31 by adinari           #+#    #+#              #
-#    Updated: 2022/10/14 21:17:17 by adinari          ###   ########.fr        #
+#    Updated: 2022/10/18 17:34:03 by adinari          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = pipex
 
-FILES = main.c\
+FILES = pipex.c\
 		libft/libft.a\
 		gnl/get_next_line.c\
-		gnl/get_next_line_utils.c
+		gnl/get_next_line_utils.c\
+		process_utils.c
 
 OBJECTS = $(FILES:.c=.o)
 
