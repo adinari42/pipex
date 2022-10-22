@@ -6,7 +6,7 @@
 /*   By: adinari <adinari@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/18 17:32:59 by adinari           #+#    #+#             */
-/*   Updated: 2022/10/20 21:21:07 by adinari          ###   ########.fr       */
+/*   Updated: 2022/10/22 21:26:28 by adinari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,22 +56,6 @@ char	**envp_parse(char **envp)
 	return (envp_parse);
 }
 
-void	free_2d(char ***to_free)
-{
-	size_t	i;
-
-	i = 0;
-	if (*to_free == NULL)
-		return ;
-	while ((*to_free)[i] != NULL)
-	{
-		free((*to_free)[i]);
-		++i;
-	}
-	free(*to_free);
-	*to_free = NULL;
-}
-
 void	init_path(char **argv, int i)
 {
 	g_pipe.parse.cmd = ft_split(argv[i], ' ');
@@ -93,7 +77,6 @@ int	main(int argc, char *argv[], char *envp[])
 
 	g_pipe.parse.split_envp = envp_parse(envp);
 	i = 0;
-	g_pipe.error_code = 0;
 	while (i <= argc - 2)
 	{
 		pipe(g_pipe.fd);
@@ -114,7 +97,5 @@ int	main(int argc, char *argv[], char *envp[])
 		free(g_pipe.parse.path);
 		free_2d(&g_pipe.parse.cmd);
 	}
-	
 	free_and_close();
-	// system("leaks pipex");
 }

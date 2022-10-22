@@ -6,7 +6,7 @@
 /*   By: adinari <adinari@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/16 23:18:53 by adinari           #+#    #+#             */
-/*   Updated: 2022/10/20 20:57:31 by adinari          ###   ########.fr       */
+/*   Updated: 2022/10/22 21:32:00 by adinari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,16 +18,10 @@ int	init_here_doc(char *argv[])
 
 	g_pipe.file.infile = open("tmp", O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (g_pipe.file.infile == -1)
-	{
-		perror("inable to open infile\n");
-		exit(0);
-	}
+		fd_err(1);
 	g_pipe.file.tmp = open("tmp", O_RDONLY | O_CREAT);
 	if (g_pipe.file.infile == -1 || g_pipe.file.tmp == -1)
-	{
-		perror("Error: unable to open file\n");
-		exit(0);
-	}
+		fd_err(1);
 	str = get_next_line(0);
 	while (1)
 	{
@@ -40,23 +34,10 @@ int	init_here_doc(char *argv[])
 	free(str);
 	g_pipe.append = 1;
 	if (dup2(g_pipe.file.tmp, 0) == -1)
-	{
-		perror("dup2 error\n");
-		exit(0);
-	}
+		fd_err(2);
 	close(g_pipe.file.infile);
 	close(g_pipe.file.tmp);
 	return (3);
-}
-
-void	argc_err(int argc, int n)
-{
-	if (argc < n)
-	{
-		free_2d(&g_pipe.parse.split_envp);
-		perror("invalid number of arguments\n");
-		exit(1);
-	}
 }
 
 int	init_infile(char *argv[], int argc)
@@ -112,24 +93,8 @@ void	child(char *argv[], int argc, int i, char *envp[])
 	}
 }
 
-// int timeout(int secs)
-// {
-// 	long start = gettimeofday();
-
-// 	while(gettimeofday() - start < 5)
-// 	{
-// 		if (waitpid(g_pipe.pid, &g_pipe.error_code, WNOHANG) == 0)
-// 			return 0;
-// 	}
-// )
-	
-// 	return 1;
-// }
-
-
 void	parent(void)
 {
 	dup2(g_pipe.fd[0], 0);
 	close (g_pipe.fd[1]);
-	waitpid(g_pipe.pid, &g_pipe.error_code, 0);
 }

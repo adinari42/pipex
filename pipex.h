@@ -6,7 +6,7 @@
 /*   By: adinari <adinari@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/27 21:20:09 by adinari           #+#    #+#             */
-/*   Updated: 2022/10/20 02:20:58 by adinari          ###   ########.fr       */
+/*   Updated: 2022/10/22 21:32:26 by adinari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,9 @@ typedef struct file
 
 typedef struct parse
 {
-	char	**cmd;//for char **split
+	char	**cmd;
 	char	**split_envp;
-	char 	*path;
+	char	*path;
 }				t_parse;
 
 typedef struct pipe
@@ -44,13 +44,15 @@ typedef struct pipe
 	int		append;
 }				t_pipe;
 
-t_pipe g_pipe;
+t_pipe	g_pipe;
 
-int	init_here_doc(char *argv[]);
+int		init_here_doc(char *argv[]);
 void	child(char *argv[], int argc, int i, char *envp[]);
 void	parent(void);
 void	init_outfile(char *argv[], int argc);
-int	init_infile(char *argv[], int argc);
+int		init_infile(char *argv[], int argc);
 void	free_2d(char ***to_free);
+void	argc_err(int argc, int n);
+void	fd_err(int i);
 
 #endif

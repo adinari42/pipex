@@ -6,7 +6,7 @@
 #    By: adinari <adinari@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/04/05 22:43:50 by adinari           #+#    #+#              #
-#    Updated: 2022/10/13 22:38:24 by adinari          ###   ########.fr        #
+#    Updated: 2022/10/22 21:22:12 by adinari          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -24,27 +24,29 @@ SRCS=    ft_atoi.c ft_bzero.c ft_calloc.c ft_isalnum.c ft_isalpha.c \
 BONUSSRC=   ft_lstnew.c ft_lstadd_front.c ft_lstsize.c ft_lstlast.c\
 	ft_lstadd_back.c ft_lstdelone.c ft_lstclear.c ft_lstiter.c\
 	ft_lstmap.c
-				
 
 OBJS=$(SRCS:.c=.o)
 BONUSOBJS=$(BONUSSRC:.c=.o)
 
-CC = cc
+CC = gcc
 CFLAG = -Wall -Wextra -Werror
 
 all: $(NAME)
 
+%.o:%.c
+	@$(CC) $(FLAGS) -c $< -o $@
+
 $(NAME): $(OBJS)
-	ar rcs $(NAME) $(OBJS)
-    
+	@ar rc $(NAME) $(OBJS)
+
 bonus : $(BONUSOBJS) $(OBJS)
-	ar rc $(NAME) $(BONUSOBJS) $(OBJ)
+	@ar rc $(NAME) $(BONUSOBJS)
 
 clean:
-	rm -f $(OBJS) $(BONUSOBJS)
+	@rm -f $(OBJS) $(BONUSOBJS)
 
 fclean: clean
-	rm -f $(NAME)
+	@rm -f $(NAME)
 
-re: fclean all
+re: @fclean all
 .PHONY: all clean fclean re
