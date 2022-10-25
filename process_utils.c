@@ -6,95 +6,66 @@
 /*   By: adinari <adinari@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/16 23:18:53 by adinari           #+#    #+#             */
-/*   Updated: 2022/10/22 21:32:00 by adinari          ###   ########.fr       */
+/*   Updated: 2022/10/25 00:16:27 by adinari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-int	init_here_doc(char *argv[])
+int	init_infile(char *argv[], int argc, t_pipe *pipe)
 {
-	char	*str;
-
-	g_pipe.file.infile = open("tmp", O_WRONLY | O_CREAT | O_TRUNC, 0644);
-	if (g_pipe.file.infile == -1)
-		fd_err(1);
-	g_pipe.file.tmp = open("tmp", O_RDONLY | O_CREAT);
-	if (g_pipe.file.infile == -1 || g_pipe.file.tmp == -1)
-		fd_err(1);
-	str = get_next_line(0);
-	while (1)
-	{
-		if (ft_strncmp(argv[2], str, ft_strlen(str) - 1) == 0)
-			break ;
-		ft_putstr_fd(str, g_pipe.file.infile);
-		free(str);
-		str = get_next_line(0);
-	}
-	free(str);
-	g_pipe.append = 1;
-	if (dup2(g_pipe.file.tmp, 0) == -1)
-		fd_err(2);
-	close(g_pipe.file.infile);
-	close(g_pipe.file.tmp);
-	return (3);
-}
-
-int	init_infile(char *argv[], int argc)
-{
-	argc_err(argc, 5);
-	g_pipe.append = 0;
+	argc_err(argc, 5, pipe);
+	pipe->append = 0;
 	if (ft_strncmp(argv[1], "here_doc", ft_strlen(argv[1])) == 0)
 	{
-		argc_err(argc, 6);
-		return (init_here_doc(argv));
+		argc_err(argc, 6, pipe);
+		return (init_here_doc(argv, pipe));
 	}
 	else
 	{
-		g_pipe.file.infile = open(argv[1], O_RDONLY);
-		if (g_pipe.file.infile == -1)
-		{
-			perror("Error:\n");
-			exit(1);
-		}
-		dup2(g_pipe.file.infile, 0);
-		close(g_pipe.file.infile);
+		pipe->file.infile = open(argv[1], O_RDONLY);
+		if (pipe->file.infile == -1)
+			fd_err(1);
+		dup2(pipe->file.infile, 0);
+		close(pipe->file.infile);
 		return (2);
 	}
 }
 
-void	init_outfile(char *argv[], int argc)
+void	init_outfile(char *argv[], int argc, t_pipe *pipe)
 {
-	if (g_pipe.append == 0)
-		g_pipe.file.outfile = open(argv[argc - 1],
+	if (pipe->append == 0)
+		pipe->file.outfile = open(argv[argc - 1],
 				O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	else
-		g_pipe.file.outfile = open(argv[argc - 1],
+		pipe->file.outfile = open(argv[argc - 1],
 				O_WRONLY | O_CREAT | O_APPEND, 0644);
-	if (g_pipe.file.outfile == -1)
-	{
-		perror("failed to create outfile");
-		exit(1);
-	}
-	dup2(g_pipe.file.outfile, 1);
+	if (pipe->file.outfile == -1)
+		fd_err(1);
+	if (dup2(pipe->file.outfile, 1) == -1)
+		fd_err(2);
 }
 
-void	child(char *argv[], int argc, int i, char *envp[])
+void	child(char *argv[], int argc, int i, t_pipe *pipe)
 {
 	if (i < argc - 2)
-		dup2(g_pipe.fd[1], 1);
-	if (i == argc - 2)
-		init_outfile(argv, argc);
-	close (g_pipe.fd[0]);
-	if (execve(g_pipe.parse.path, g_pipe.parse.cmd, envp) == -1)
-	{
-		perror("command not found");
-		exit(1);
+	{	
+		if (dup2(pipe->fd[1], 1) == -1)
+			fd_err(2);
 	}
+	if (i == argc - 2)
+		init_outfile(argv, argc, pipe);
+	close (pipe->fd[0]);
 }
 
-void	parent(void)
+void	exec_cmd(t_pipe *pipe, char *envp[])
 {
-	dup2(g_pipe.fd[0], 0);
-	close (g_pipe.fd[1]);
+	if (execve(pipe->parse.path, pipe->parse.cmd, envp) == -1)
+		fd_err(3);
+}
+
+void	parent(t_pipe *pipe)
+{
+	dup2(pipe->fd[0], 0);
+	close (pipe->fd[1]);
 }

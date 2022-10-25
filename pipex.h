@@ -6,7 +6,7 @@
 /*   By: adinari <adinari@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/09/27 21:20:09 by adinari           #+#    #+#             */
-/*   Updated: 2022/10/22 21:32:26 by adinari          ###   ########.fr       */
+/*   Updated: 2022/10/25 00:13:38 by adinari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,15 +44,17 @@ typedef struct pipe
 	int		append;
 }				t_pipe;
 
-t_pipe	g_pipe;
+// t_pipe	g_pipe;
 
-int		init_here_doc(char *argv[]);
-void	child(char *argv[], int argc, int i, char *envp[]);
-void	parent(void);
-void	init_outfile(char *argv[], int argc);
-int		init_infile(char *argv[], int argc);
+int		init_here_doc(char *argv[], t_pipe *pipe);
+void	child(char *argv[], int argc, int i, t_pipe *pipe);
+void	parent(t_pipe *pipe);
+void	init_outfile(char *argv[], int argc, t_pipe *pipe);
+int		init_infile(char *argv[], int argc, t_pipe *pipe);
 void	free_2d(char ***to_free);
-void	argc_err(int argc, int n);
+void	argc_err(int argc, int n, t_pipe *pipe);
 void	fd_err(int i);
+void	exec_cmd(t_pipe *pipe, char *envp[]);
+void	free_parse(t_pipe *pipe);
 
 #endif

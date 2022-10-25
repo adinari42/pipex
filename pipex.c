@@ -6,7 +6,7 @@
 /*   By: adinari <adinari@student.42.fr>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/18 17:32:59 by adinari           #+#    #+#             */
-/*   Updated: 2022/10/22 21:26:28 by adinari          ###   ########.fr       */
+/*   Updated: 2022/10/25 00:17:00 by adinari          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,8 @@
 #include <fcntl.h>
 
 //this version takes care of multiple pipes with direct path or single command.
+// structure presentation :
+//https://miro.com/app/board/uXjVPO5HwXk=/?share_link_id=144382794819
 char	**ft_split(char const *s, char c);
 
 char	*ret_path(char **string, char *cmd)
@@ -56,46 +58,53 @@ char	**envp_parse(char **envp)
 	return (envp_parse);
 }
 
-void	init_path(char **argv, int i)
+void	init_path(char **argv, int i, t_pipe *pipe)
 {
-	g_pipe.parse.cmd = ft_split(argv[i], ' ');
-	g_pipe.parse.path = ret_path(g_pipe.parse.split_envp,
-			g_pipe.parse.cmd[0]);
+	pipe->parse.cmd = ft_split(argv[i], ' ');
+	pipe->parse.path = ret_path(pipe->parse.split_envp,
+			pipe->parse.cmd[0]);
 }
 
-void	free_and_close(void)
+void	free_and_close(t_pipe *pipe)
 {
-	free_2d(&g_pipe.parse.split_envp);
-	close(g_pipe.fd[0]);
-	close(g_pipe.fd[1]);
+	free_2d(&pipe->parse.split_envp);
+	close(pipe->fd[0]);
+	close(pipe->fd[1]);
 	unlink("tmp");
 }
 
+/*
+init_infile : -opens/creates infile and redirects it as stdin
+		-works as input for first cmd
+init_path : parses environment and returns proper path of the cmd
+child : redirects it's stdout to fd[1], then execve to run the proper cmd
+parent : redirects fd[0] of cmd to stdin so it becomes input of next cmd
+*/
 int	main(int argc, char *argv[], char *envp[])
 {
-	int	i;
+	int		i;
+	t_pipe	pip;
 
-	g_pipe.parse.split_envp = envp_parse(envp);
+	pip.parse.split_envp = envp_parse(envp);
 	i = 0;
 	while (i <= argc - 2)
 	{
-		pipe(g_pipe.fd);
+		pipe(pip.fd);
 		if (i == 0)
-			i = init_infile(argv, argc);
-		init_path(argv, i);
-		g_pipe.pid = fork();
-		if (g_pipe.pid == -1)
+			i = init_infile(argv, argc, &pip);
+		init_path(argv, i, &pip);
+		pip.pid = fork();
+		if (pip.pid == -1)
+			fd_err(4);
+		if (pip.pid == 0)
 		{
-			perror("Fork failure\n");
-			exit(1);
+			child(argv, argc, i, &pip);
+			exec_cmd(&pip, envp);
 		}
-		if (g_pipe.pid == 0)
-			child(argv, argc, i, envp);
 		else
-			parent();
+			parent(&pip);
 		i++;
-		free(g_pipe.parse.path);
-		free_2d(&g_pipe.parse.cmd);
+		free_parse(&pip);
 	}
-	free_and_close();
+	free_and_close(&pip);
 }

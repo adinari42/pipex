@@ -6,7 +6,7 @@
 #    By: adinari <adinari@student.42.fr>            +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/04/05 22:43:50 by adinari           #+#    #+#              #
-#    Updated: 2022/10/22 21:22:12 by adinari          ###   ########.fr        #
+#    Updated: 2022/10/24 19:46:10 by adinari          ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -28,7 +28,7 @@ BONUSSRC=   ft_lstnew.c ft_lstadd_front.c ft_lstsize.c ft_lstlast.c\
 OBJS=$(SRCS:.c=.o)
 BONUSOBJS=$(BONUSSRC:.c=.o)
 
-CC = gcc
+CC = gcc -g
 CFLAG = -Wall -Wextra -Werror
 
 all: $(NAME)
